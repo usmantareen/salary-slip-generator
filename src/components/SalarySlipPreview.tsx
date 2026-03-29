@@ -35,8 +35,6 @@ export function SalarySlipPreview({ data, previewRef }: Props) {
 
   const maxRows = Math.max(data.earnings.length, data.deductions.length, 1);
 
-  const hasSignature = data.signatures.employeeSignature || data.signatures.authorizedSignatory || data.signatures.companySeal;
-
   return (
     <div
       ref={previewRef}
@@ -189,30 +187,6 @@ export function SalarySlipPreview({ data, previewRef }: Props) {
 
       {/* Spacer */}
       <div style={{ flex: 1, minHeight: 60 }} />
-
-      {/* Signatures */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40 }}>
-          {([
-            { key: 'employeeSignature' as const, label: 'Employee Signature' },
-            { key: 'authorizedSignatory' as const, label: 'Authorized Signatory' },
-            { key: 'companySeal' as const, label: 'Company Seal' },
-          ]).map(({ key, label }) => (
-            <div key={key} style={{ textAlign: 'center' }}>
-              <div style={{ borderBottom: '1px solid #9ca3af', height: 64, marginBottom: 8, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 10px' }}>
-                {data.signatures[key] && (
-                  <img
-                    src={data.signatures[key]!}
-                    alt={label}
-                    style={{ maxHeight: 50, maxWidth: '100%', objectFit: 'contain' }}
-                  />
-                )}
-              </div>
-              <p style={{ fontSize: '6.5pt', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Footer */}
       <div style={{ textAlign: 'center', borderTop: '1px solid #f3f4f6', paddingTop: 20 }}>

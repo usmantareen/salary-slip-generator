@@ -46,11 +46,6 @@ const initialData: SalaryData = {
     { id: '4', name: 'Provident Fund', amount: 3600 },
     { id: '5', name: 'Professional Tax', amount: 200 },
   ],
-  signatures: {
-    employeeSignature: null,
-    authorizedSignatory: null,
-    companySeal: null,
-  },
 };
 
 type ViewMode = 'single' | 'bulk';
@@ -372,7 +367,6 @@ export default function App() {
                     month={data.salary.month}
                     year={data.salary.year}
                     taxConfig={currentTaxConfig}
-                    signatures={data.signatures}
                   />
                 )}
               </div>

@@ -12,7 +12,7 @@ interface Props {
   month: string;
   year: string;
   taxConfig: TaxConfig | null;
-  signatures: SalaryData['signatures'];
+
 }
 
 interface GenerationResult {
@@ -23,7 +23,7 @@ interface GenerationResult {
   pdfData?: string;
 }
 
-export function BulkGenerator({ employees, company, month, year, taxConfig, signatures }: Props) {
+export function BulkGenerator({ employees, company, month, year, taxConfig }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [results, setResults] = useState<GenerationResult[]>([]);
@@ -70,7 +70,6 @@ export function BulkGenerator({ employees, company, month, year, taxConfig, sign
           },
           earnings,
           deductions: [],
-          signatures
         };
 
         taxCalculation = calculateTax(tempData, taxConfig);
@@ -111,7 +110,6 @@ export function BulkGenerator({ employees, company, month, year, taxConfig, sign
         },
         earnings,
         deductions,
-        signatures
       };
 
       const container = document.createElement('div');
@@ -210,22 +208,6 @@ export function BulkGenerator({ employees, company, month, year, taxConfig, sign
     };
 
     const maxRows = Math.max(data.earnings.length, data.deductions.length, 5);
-
-    const signaturesHtml = [
-      { key: 'employeeSignature', label: 'Employee Signature' },
-      { key: 'authorizedSignatory', label: 'Authorized Signatory' },
-      { key: 'companySeal', label: 'Company Seal' },
-    ].map(({ key, label }) => `
-      <div style="text-align: center;">
-        <div style="border-bottom: 1px solid #9ca3af; height: 64px; margin-bottom: 8px; display: flex; align-items: flex-end; justify-content: center; padding: 0 10px;">
-          ${data.signatures[key as keyof typeof data.signatures] ? `
-            <img src="${data.signatures[key as keyof typeof data.signatures]}" 
-                 style="max-height: 50px; max-width: 100%; object-fit: contain;" />
-          ` : ''}
-        </div>
-        <p style="font-size: 6.5pt; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 8px;">${label}</p>
-      </div>
-    `).join('');
 
     return `
       <div style="
@@ -375,13 +357,6 @@ export function BulkGenerator({ employees, company, month, year, taxConfig, sign
 
         <!-- Spacer -->
         <div style="flex: 1; min-height: 60px;"></div>
-
-        <!-- Signatures -->
-        <div style="margin-bottom: 24px;">
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;">
-            ${signaturesHtml}
-          </div>
-        </div>
 
         <!-- Footer -->
         <div style="text-align: center; border-top: 1px solid #f3f4f6; padding-top: 20px;">

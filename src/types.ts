@@ -93,19 +93,13 @@ export interface SalaryDetails {
   taxCalculation?: TaxCalculation;
 }
 
-export interface Signatures {
-  employeeSignature: string | null;
-  authorizedSignatory: string | null;
-  companySeal: string | null;
-}
-
 export interface SalaryData {
   company: CompanyDetails;
   employee: EmployeeDetails;
   salary: SalaryDetails;
   earnings: SalaryItem[];
   deductions: SalaryItem[];
-  signatures: Signatures;
+  signatures?: Record<string, unknown>;
 }
 
 export interface BulkEmployeeData {

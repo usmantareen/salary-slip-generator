@@ -98,17 +98,6 @@ export function SalarySlipForm({ data, onChange }: Props) {
   const updateDeduction = (id: string, f: keyof SalaryItem, v: string | number) =>
     onChange({ ...data, deductions: data.deductions.map(d => d.id === id ? { ...d, [f]: v } : d) });
 
-  /* Signature upload */
-  const handleSignatureUpload = (key: keyof typeof data.signatures) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onloadend = () =>
-        onChange({ ...data, signatures: { ...data.signatures, [key]: reader.result as string } });
-      reader.readAsDataURL(file);
-    };
-
   /* Totals */
   const totalEarnings   = data.earnings.reduce((s, e) => s + (Number(e.amount) || 0), 0);
   const totalDeductions = data.deductions.reduce((s, d) => s + (Number(d.amount) || 0), 0);
@@ -313,36 +302,6 @@ export function SalarySlipForm({ data, onChange }: Props) {
           </div>
         </FieldGroup>
 
-        {/* Signatures */}
-        <FieldGroup title="Signatures">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {([
-              { key: 'employeeSignature' as const, label: 'Employee Signature' },
-              { key: 'authorizedSignatory' as const, label: 'Authorised Signatory' },
-              { key: 'companySeal' as const, label: 'Company Seal' },
-            ]).map(({ key, label: lbl }) => (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {data.signatures[key] ? (
-                    <img src={data.signatures[key]!} alt={lbl} style={{ height: 24, width: 40, objectFit: 'contain', border: '1px solid var(--clr-border)', borderRadius: 4, padding: 2 }} />
-                  ) : (
-                    <div style={{ height: 24, width: 40, background: '#f3f4f6', border: '1px dashed var(--clr-border)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Upload size={10} color="var(--clr-text-subtle)" />
-                    </div>
-                  )}
-                  <span style={{ fontSize: 12, color: 'var(--clr-text-muted)', fontWeight: 500 }}>{lbl}</span>
-                </div>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--clr-text)', cursor: 'pointer', padding: '3px 8px', borderRadius: 5, transition: 'background 150ms' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#f4f4f5'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  {data.signatures[key] ? 'Replace' : 'Upload'}
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleSignatureUpload(key)} />
-                </label>
-              </div>
-            ))}
-          </div>
-        </FieldGroup>
       </div>
 
       {/* Row 3: Salary Breakdown (full width) */}
