@@ -19,14 +19,26 @@ export function SalarySlipPreview({ data, previewRef }: Props) {
     }).format(amount);
   };
 
-  const netPayWords = netPay > 0
-    ? toWords(netPay).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' Rupees Only'
-    : 'Zero Rupees Only';
+  const netPayWords = (() => {
+    if (netPay <= 0) return 'Zero Rupees Only';
+    
+    const integerPart = Math.floor(netPay);
+    const fractionalPart = Math.round((netPay - integerPart) * 100);
+    
+    let words = toWords(integerPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' Rupees';
+    
+    if (fractionalPart > 0) {
+      words += ' and ' + toWords(fractionalPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' Paise';
+    }
+    
+    return words + ' Only';
+  })();
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
       return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     } catch {
       return dateStr;

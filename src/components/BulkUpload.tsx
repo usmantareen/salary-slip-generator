@@ -61,11 +61,11 @@ export function BulkUpload({ onBulkDataUpload, onClearData, company, month, year
     const lines = content.trim().split('\n');
     if (lines.length < 2) return [];
     
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const headers = splitCSVLine(lines[0]).map(h => h.trim().toLowerCase());
     const data: BulkEmployeeData[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
+      const values = splitCSVLine(lines[i]);
       const row: any = {};
       
       headers.forEach((header, index) => {
@@ -96,6 +96,26 @@ export function BulkUpload({ onBulkDataUpload, onClearData, company, month, year
     return data;
   };
 
+  const splitCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
   const validateData = (data: BulkEmployeeData[]): BulkUploadResult => {
     const valid: BulkEmployeeData[] = [];
     const invalid: BulkEmployeeData[] = [];
@@ -109,8 +129,12 @@ export function BulkUpload({ onBulkDataUpload, onClearData, company, month, year
       if (!row.department.trim()) errors.push('Department is required');
       if (!row.doj.trim()) errors.push('Date of Joining is required');
       if (row.basicSalary <= 0) errors.push('Basic Salary must be greater than 0');
-      if (row.paidDays < 0 || row.paidDays > 31) errors.push('Paid Days must be between 0-31');
-      if (row.lopDays < 0 || row.lopDays > 31) errors.push('LOP Days must be between 0-31');
+      
+      const paidDays = row.paidDays ?? 0;
+      const lopDays = row.lopDays ?? 0;
+      
+      if (paidDays < 0 || paidDays > 31) errors.push('Paid Days must be between 0-31');
+      if (lopDays < 0 || lopDays > 31) errors.push('LOP Days must be between 0-31');
       
       if (errors.length > 0) {
         invalid.push({ ...row, errors });

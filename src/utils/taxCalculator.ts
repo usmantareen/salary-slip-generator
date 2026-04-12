@@ -380,16 +380,40 @@ export function calculateTax(
 }
 
 function calculateSlabTax(amount: number, slabs: TaxSlab[], monthsInYear: number): number {
-  for (const slab of slabs) {
+  let totalTax = 0;
+  
+  // Sort slabs by min value to ensure progressive calculation
+  const sortedSlabs = [...slabs].sort((a, b) => a.min - b.min);
+  
+  for (let i = 0; i < sortedSlabs.length; i++) {
+    const slab = sortedSlabs[i];
+    const prevMax = i > 0 ? sortedSlabs[i - 1].max || sortedSlabs[i - 1].min : 0;
+    
+    if (amount > slab.min) {
+      const slabMax = slab.max !== null ? slab.max : amount;
+      const taxableInThisSlab = Math.min(amount, slabMax) - slab.min;
+      
+      if (taxableInThisSlab > 0) {
+        totalTax += (taxableInThisSlab * (slab.rate / 100));
+      }
+    }
+  }
+
+  // If fixed amounts are provided in the config, they usually represent 
+  // the cumulative tax of previous slabs. If present, we use the original logic
+  // but usually, it's safer to calculate progressively.
+  // However, looking at the provided configs, fixedAmount is used as an offset.
+  
+  // Revised logic to support the specific fixedAmount structure in the config:
+  for (const slab of sortedSlabs) {
     if (amount >= slab.min && (slab.max === null || amount <= slab.max)) {
-      const rate = slab.rate / 100;
-      const slabIncome = amount - slab.min;
-      const taxOnSlab = slabIncome * rate;
+      const taxOnSlab = (amount - slab.min) * (slab.rate / 100);
       const totalTaxInSlab = (slab.fixedAmount || 0) + taxOnSlab;
       return monthsInYear === 12 ? totalTaxInSlab / 12 : totalTaxInSlab;
     }
   }
-  return 0;
+  
+  return totalTax / (monthsInYear === 12 ? 12 : 1);
 }
 
 export function formatCurrency(amount: number, currency: string, locale: string): string {
