@@ -11,7 +11,7 @@ export interface TaxRule {
   rate?: number;
   minAmount?: number;
   maxAmount?: number;
-  baseOn: 'gross' | 'basic' | 'taxable' | 'net';
+  baseOn: 'gross' | 'basic' | 'taxable' | 'net' | 'tax';
   slabs?: TaxSlab[];
   formula?: string;
   isDeduction: boolean;

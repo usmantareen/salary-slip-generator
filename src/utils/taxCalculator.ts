@@ -60,7 +60,7 @@ export const defaultTaxConfigs: TaxConfig[] = [
         isDeduction: true,
         isStatutory: true,
         description: 'Monthly TDS as per old tax regime',
-        appliesTo: 'monthly',
+        appliesTo: 'annual',
         slabs: [
           { min: 0, max: 250000, rate: 0, fixedAmount: 0 },
           { min: 250001, max: 500000, rate: 5, fixedAmount: 0 },
@@ -73,7 +73,7 @@ export const defaultTaxConfigs: TaxConfig[] = [
         name: 'Health & Education Cess',
         type: 'percentage',
         rate: 4,
-        baseOn: 'taxable',
+        baseOn: 'tax',
         isDeduction: true,
         isStatutory: true,
         description: '4% of Income Tax',
@@ -137,7 +137,7 @@ export const defaultTaxConfigs: TaxConfig[] = [
         isDeduction: true,
         isStatutory: true,
         description: 'Monthly TDS as per new tax regime',
-        appliesTo: 'monthly',
+        appliesTo: 'annual',
         slabs: [
           { min: 0, max: 300000, rate: 0, fixedAmount: 0 },
           { min: 300001, max: 600000, rate: 5, fixedAmount: 0 },
@@ -152,7 +152,7 @@ export const defaultTaxConfigs: TaxConfig[] = [
         name: 'Health & Education Cess',
         type: 'percentage',
         rate: 4,
-        baseOn: 'taxable',
+        baseOn: 'tax',
         isDeduction: true,
         isStatutory: true,
         description: '4% of Income Tax',
@@ -204,7 +204,7 @@ export const defaultTaxConfigs: TaxConfig[] = [
         isDeduction: true,
         isStatutory: true,
         description: 'Federal income tax brackets',
-        appliesTo: 'monthly',
+        appliesTo: 'annual',
         slabs: [
           { min: 0, max: 11600, rate: 10, fixedAmount: 0 },
           { min: 11601, max: 47150, rate: 12, fixedAmount: 1160 },
@@ -249,7 +249,7 @@ export const defaultTaxConfigs: TaxConfig[] = [
         isDeduction: true,
         isStatutory: true,
         description: 'UK income tax rates',
-        appliesTo: 'monthly',
+        appliesTo: 'annual',
         slabs: [
           { min: 0, max: 12570, rate: 0, fixedAmount: 0 },
           { min: 12571, max: 50270, rate: 20, fixedAmount: 0 },
@@ -324,6 +324,9 @@ export function calculateTax(
       case 'net':
         baseAmount = grossEarnings - totalDeductions;
         break;
+      case 'tax':
+        baseAmount = incomeTaxAmount;
+        break;
     }
 
     let calculatedAmount = 0;
@@ -348,17 +351,18 @@ export function calculateTax(
     }
 
     if (calculatedAmount > 0) {
+      const roundedAmount = Math.round(calculatedAmount * 100) / 100;
       breakdown.push({
         ruleId: rule.id,
         ruleName: rule.name,
         baseAmount,
-        calculatedAmount: Math.round(calculatedAmount * 100) / 100,
+        calculatedAmount: roundedAmount,
         rate: rule.rate,
         isDeduction: rule.isDeduction
       });
 
       if (rule.isDeduction) {
-        totalDeductions += calculatedAmount;
+        totalDeductions += roundedAmount;
       }
     }
   }
@@ -382,7 +386,7 @@ function calculateSlabTax(amount: number, slabs: TaxSlab[], monthsInYear: number
       const slabIncome = amount - slab.min;
       const taxOnSlab = slabIncome * rate;
       const totalTaxInSlab = (slab.fixedAmount || 0) + taxOnSlab;
-      return monthsInYear === 1 ? totalTaxInSlab / 12 : totalTaxInSlab;
+      return monthsInYear === 12 ? totalTaxInSlab / 12 : totalTaxInSlab;
     }
   }
   return 0;
