@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import { useState } from 'react';
 import { BulkEmployeeData, SalaryData, TaxConfig, TaxCalculation } from '../types';
 import { calculateTax } from '../utils/taxCalculator';
+import { formatCurrency, amountToWords, getCurrencyInfo } from '../utils/currency';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { toWords } from 'number-to-words';
 import { Package, Download, FileText, Check, Loader2, AlertCircle, ChevronRight, X } from 'lucide-react';
 
 interface Props {
@@ -28,7 +28,6 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [showDetails, setShowDetails] = useState(false);
-  const previewRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const generateSinglePayslip = async (employee: BulkEmployeeData): Promise<GenerationResult> => {
     try {
@@ -118,35 +117,37 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
       container.style.width = '210mm';
       document.body.appendChild(container);
 
-      const canvas = await renderPayslipToCanvas(data, container, taxConfig);
-      
-      if (!canvas) {
-        throw new Error('Failed to render payslip');
+      try {
+        const canvas = await renderPayslipToCanvas(data, container, taxConfig);
+        
+        if (!canvas) {
+          throw new Error('Failed to render payslip');
+        }
+
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+          compress: true
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+        const pdfData = pdf.output('datauristring');
+
+        return {
+          success: true,
+          employeeId: employee.employeeId,
+          name: employee.name,
+          pdfData
+        };
+      } finally {
+        document.body.removeChild(container);
       }
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-
-      const pdfData = pdf.output('datauristring');
-
-      document.body.removeChild(container);
-
-      return {
-        success: true,
-        employeeId: employee.employeeId,
-        name: employee.name,
-        pdfData
-      };
     } catch (error) {
       return {
         success: false,
@@ -181,33 +182,18 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
     });
   };
 
-  const currencyWordsMap: Record<string, { major: string; minor: string; symbol: string }> = {
-    INR: { major: 'Rupees', minor: 'Paise', symbol: '₹' },
-    USD: { major: 'Dollars', minor: 'Cents', symbol: '$' },
-    GBP: { major: 'Pounds', minor: 'Pence', symbol: '£' },
-    AED: { major: 'Dirhams', minor: 'Fils', symbol: 'AED' },
-  };
-
   const generatePayslipHTML = (data: SalaryData, taxConfig: TaxConfig | null): string => {
     const totalEarnings = data.earnings.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const totalDeductions = data.deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const netPay = totalEarnings - totalDeductions;
 
     const currency = taxConfig?.currency || 'INR';
-    const cw = currencyWordsMap[currency] || { major: 'Units', minor: 'Fraction', symbol: currency };
+    const locale = taxConfig?.locale || 'en-IN';
+    const cw = getCurrencyInfo(currency);
 
-    const fmt = (amount: number) => {
-      return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(amount);
-    };
+    const fmt = (amount: number) => formatCurrency(amount, currency, locale);
 
-    const netPayWords = netPay > 0
-      ? toWords(Math.floor(netPay)).replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) + ` ${cw.major} Only`
-      : `Zero ${cw.major} Only`;
+    const netPayWords = amountToWords(netPay, currency);
 
     const formatDate = (dateStr: string) => {
       if (!dateStr) return '-';

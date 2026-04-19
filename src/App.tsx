@@ -51,9 +51,6 @@ const initialData: SalaryData = {
 type ViewMode = 'single' | 'bulk';
 type PanelView = 'form' | 'preview';
 
-  const fmt = (n: number) =>
-    n.toLocaleString('en-IN', { style: 'currency', currency: currentTaxConfig.currency, minimumFractionDigits: 0 });
-
 export default function App() {
   const [data, setData] = useState<SalaryData>(initialData);
   const [panelView, setPanelView] = useState<PanelView>('form');
@@ -62,6 +59,7 @@ export default function App() {
   const [currentTaxConfig, setCurrentTaxConfig] = useState<TaxConfig>(defaultTaxConfigs[0]);
   const [bulkData, setBulkData] = useState<BulkUploadResult | null>(null);
   const [selectedBulkEmployees, setSelectedBulkEmployees] = useState<BulkEmployeeData[]>([]);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
   const netPay = data.earnings.reduce((s, e) => s + e.amount, 0)
@@ -95,7 +93,8 @@ export default function App() {
       pdf.save(`Salary_Slip_${data.employee.name.replace(/\s+/g, '_')}_${data.salary.month}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      setPdfError('Failed to generate PDF. Please try again.');
+      setTimeout(() => setPdfError(null), 4000);
     } finally {
       setIsGenerating(false);
     }
@@ -108,13 +107,7 @@ export default function App() {
       const newDeductions = taxCalc.breakdown
         .filter(b => b.isDeduction)
         .map((b, idx) => ({ id: `tax-${idx}`, name: b.ruleName, amount: b.calculatedAmount }));
-      const nonTaxDeductions = data.deductions.filter(d =>
-        !d.name.toLowerCase().includes('tax') &&
-        !d.name.toLowerCase().includes('pf') &&
-        !d.name.toLowerCase().includes('provident') &&
-        !d.name.toLowerCase().includes('esi') &&
-        !d.name.toLowerCase().includes('professional')
-      );
+      const nonTaxDeductions = data.deductions.filter(d => !d.id.startsWith('tax-'));
       setData({
         ...data,
         deductions: [...nonTaxDeductions, ...newDeductions],
@@ -137,6 +130,18 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--clr-bg)' }}>
+
+      {pdfError && (
+        <div style={{
+          position: 'fixed', top: 16, right: 16, zIndex: 9999,
+          padding: '10px 16px', background: '#dc2626', color: '#fff',
+          borderRadius: 8, fontSize: 13, fontWeight: 500,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          {pdfError}
+        </div>
+      )}
 
       {/* ── HEADER ─────────────────────────────────────────── */}
       <header className="app-header">

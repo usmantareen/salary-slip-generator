@@ -54,72 +54,15 @@ function InlineTextarea({
   );
 }
 
-/* ─── Main Component ──────────────────────────────────────── */
+interface SalaryRowProps {
+  item: SalaryItem;
+  onNameChange: (v: string) => void;
+  onAmountChange: (v: number) => void;
+  onRemove: () => void;
+}
 
-export function SalarySlipForm({ data, onChange, taxConfig }: Props) {
-
-  /* Company */
-  const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    onChange({ ...data, company: { ...data.company, [e.target.name]: e.target.value } });
-  };
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => onChange({ ...data, company: { ...data.company, logo: reader.result as string } });
-    reader.readAsDataURL(file);
-  };
-
-  /* Employee */
-  const handleEmployeeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...data, employee: { ...data.employee, [e.target.name]: e.target.value } });
-  };
-
-  /* Salary period */
-  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const value = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
-    onChange({ ...data, salary: { ...data.salary, [e.target.name]: value } });
-  };
-
-  /* Earnings */
-  const addEarning = () =>
-    onChange({ ...data, earnings: [...data.earnings, { id: Date.now().toString(), name: '', amount: 0 }] });
-  const removeEarning = (id: string) =>
-    onChange({ ...data, earnings: data.earnings.filter(e => e.id !== id) });
-  const updateEarning = (id: string, f: keyof SalaryItem, v: string | number) =>
-    onChange({ ...data, earnings: data.earnings.map(e => e.id === id ? { ...e, [f]: v } : e) });
-
-  /* Deductions */
-  const addDeduction = () =>
-    onChange({ ...data, deductions: [...data.deductions, { id: Date.now().toString(), name: '', amount: 0 }] });
-  const removeDeduction = (id: string) =>
-    onChange({ ...data, deductions: data.deductions.filter(d => d.id !== id) });
-  const updateDeduction = (id: string, f: keyof SalaryItem, v: string | number) =>
-    onChange({ ...data, deductions: data.deductions.map(d => d.id === id ? { ...d, [f]: v } : d) });
-
-  /* Totals */
-  const totalEarnings   = data.earnings.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const totalDeductions = data.deductions.reduce((s, d) => s + (Number(d.amount) || 0), 0);
-  const netPay          = totalEarnings - totalDeductions;
-
-  const currency = taxConfig?.currency || 'INR';
-
-  const fmt = (n: number) =>
-    n.toLocaleString('en-IN', { style: 'currency', currency, minimumFractionDigits: 0 });
-
-  /* Inline row for earnings/deductions */
-  const SalaryRow = ({
-    item,
-    onNameChange,
-    onAmountChange,
-    onRemove,
-  }: {
-    item: SalaryItem;
-    onNameChange: (v: string) => void;
-    onAmountChange: (v: number) => void;
-    onRemove: () => void;
-  }) => (
+function SalaryRow({ item, onNameChange, onAmountChange, onRemove }: SalaryRowProps) {
+  return (
     <div className="salary-row" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <input
         type="text"
@@ -181,12 +124,15 @@ export function SalarySlipForm({ data, onChange, taxConfig }: Props) {
       </button>
     </div>
   );
+}
 
-  /* Column header for salary table */
-  const SalaryColHeader = ({
-    label: lbl,
-    onAdd,
-  }: { label: string; onAdd: () => void }) => (
+interface SalaryColHeaderProps {
+  label: string;
+  onAdd: () => void;
+}
+
+function SalaryColHeader({ label: lbl, onAdd }: SalaryColHeaderProps) {
+  return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
       <span className="field-label" style={{ marginBottom: 0 }}>{lbl}</span>
       <button
@@ -207,6 +153,61 @@ export function SalarySlipForm({ data, onChange, taxConfig }: Props) {
       </button>
     </div>
   );
+}
+
+/* ─── Main Component ──────────────────────────────────────── */
+
+export function SalarySlipForm({ data, onChange, taxConfig }: Props) {
+
+  /* Company */
+  const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    onChange({ ...data, company: { ...data.company, [e.target.name]: e.target.value } });
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => onChange({ ...data, company: { ...data.company, logo: reader.result as string } });
+    reader.readAsDataURL(file);
+  };
+
+  /* Employee */
+  const handleEmployeeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...data, employee: { ...data.employee, [e.target.name]: e.target.value } });
+  };
+
+  /* Salary period */
+  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const value = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
+    onChange({ ...data, salary: { ...data.salary, [e.target.name]: value } });
+  };
+
+  /* Earnings */
+  const addEarning = () =>
+    onChange({ ...data, earnings: [...data.earnings, { id: Date.now().toString(), name: '', amount: 0 }] });
+  const removeEarning = (id: string) =>
+    onChange({ ...data, earnings: data.earnings.filter(e => e.id !== id) });
+  const updateEarning = (id: string, f: keyof SalaryItem, v: string | number) =>
+    onChange({ ...data, earnings: data.earnings.map(e => e.id === id ? { ...e, [f]: v } : e) });
+
+  /* Deductions */
+  const addDeduction = () =>
+    onChange({ ...data, deductions: [...data.deductions, { id: Date.now().toString(), name: '', amount: 0 }] });
+  const removeDeduction = (id: string) =>
+    onChange({ ...data, deductions: data.deductions.filter(d => d.id !== id) });
+  const updateDeduction = (id: string, f: keyof SalaryItem, v: string | number) =>
+    onChange({ ...data, deductions: data.deductions.map(d => d.id === id ? { ...d, [f]: v } : d) });
+
+  /* Totals */
+  const totalEarnings   = data.earnings.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const totalDeductions = data.deductions.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+  const netPay          = totalEarnings - totalDeductions;
+
+  const currency = taxConfig?.currency || 'INR';
+
+  const fmt = (n: number) =>
+    n.toLocaleString('en-IN', { style: 'currency', currency, minimumFractionDigits: 2 });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="stagger-children">
@@ -298,8 +299,8 @@ export function SalarySlipForm({ data, onChange, taxConfig }: Props) {
               <InlineInput label="Year" type="number" name="year" value={data.salary.year} onChange={handleSalaryChange} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <InlineInput label="Paid Days" type="number" name="paidDays" value={data.salary.paidDays} onChange={handleSalaryChange} />
-              <InlineInput label="LOP Days" type="number" name="lopDays" value={data.salary.lopDays} onChange={handleSalaryChange} />
+              <InlineInput label="Paid Days" type="number" name="paidDays" value={data.salary.paidDays} onChange={handleSalaryChange} min={0} max={31} />
+              <InlineInput label="LOP Days" type="number" name="lopDays" value={data.salary.lopDays} onChange={handleSalaryChange} min={0} max={31} />
             </div>
           </div>
         </FieldGroup>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
-import { TaxConfig, TaxRule, TaxSlab } from '../types';
+import { createPortal } from 'react-dom';
+import { TaxConfig, TaxRule, TaxSlab, SalaryData } from '../types';
 import { 
   defaultTaxConfigs, 
   calculateTax, 
@@ -15,7 +15,7 @@ import {
 import { Plus, Trash2, Upload, Download, Settings, ChevronDown, ChevronUp, X, Calculator } from 'lucide-react';
 
 interface Props {
-  data: any;
+  data: SalaryData;
   onConfigChange: (config: TaxConfig) => void;
   currentConfig: TaxConfig | null;
 }
@@ -42,7 +42,7 @@ export function TaxConfiguration({ data, onConfigChange, currentConfig }: Props)
     } else {
       setSelectedConfigId(allConfigs[0]?.id || '');
     }
-  }, []);
+  }, [currentConfig]);
 
   useEffect(() => {
     const config = configs.find(c => c.id === selectedConfigId);
@@ -209,6 +209,7 @@ export function TaxConfiguration({ data, onConfigChange, currentConfig }: Props)
                 const config = configs.find(c => c.id === selectedConfigId);
                 if (config) startEditing(config);
               }}
+              aria-label="Edit Configuration"
               className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
               title="Edit Configuration"
             >
@@ -216,6 +217,7 @@ export function TaxConfiguration({ data, onConfigChange, currentConfig }: Props)
             </button>
             <button
                onClick={createNewConfig}
+               aria-label="New Config"
                className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
                title="New Config"
             >
@@ -304,7 +306,7 @@ export function TaxConfiguration({ data, onConfigChange, currentConfig }: Props)
       )}
 
       {/* Tax Editor Modal — rendered via portal to escape stacking contexts */}
-      {showEditor && editingConfig && ReactDOM.createPortal(
+      {showEditor && editingConfig && createPortal(
         <div
           className="fixed inset-0 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 9999 }}

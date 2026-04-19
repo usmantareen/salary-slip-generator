@@ -164,7 +164,8 @@ export function BulkUpload({ onBulkDataUpload, onClearData, company, month, year
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === 'text/csv' || file.name.endsWith('.csv')) {
+    if (!file) return;
+    if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
       handleFileUpload(file);
     }
   };
@@ -309,7 +310,7 @@ export function BulkUpload({ onBulkDataUpload, onClearData, company, month, year
                   <th className="px-4 py-2 text-left text-xs font-medium text-zinc-500">Name</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-zinc-500">Designation</th>
                   <th className="px-4 py-2 text-right text-xs font-medium text-zinc-500">Basic</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-zinc-500">Net Pay</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-zinc-500">Gross Pay</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -381,11 +382,4 @@ export function BulkUpload({ onBulkDataUpload, onClearData, company, month, year
       )}
     </div>
   );
-}
-
-export type { BulkUploadResult };
-
-function getSelectedEmployees(uploadResult: BulkUploadResult | null, selectedRows: Set<number>): BulkEmployeeData[] {
-  if (!uploadResult) return [];
-  return Array.from(selectedRows).map(i => uploadResult.valid[i]).filter(Boolean);
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { SalaryData, TaxConfig } from '../types';
-import { toWords } from 'number-to-words';
+import { formatCurrency, amountToWords, getCurrencyInfo } from '../utils/currency';
 
 interface Props {
   data: SalaryData;
@@ -8,44 +8,18 @@ interface Props {
   taxConfig?: TaxConfig;
 }
 
-const currencyWords: Record<string, { major: string; minor: string; symbol: string }> = {
-  INR: { major: 'Rupees', minor: 'Paise', symbol: '₹' },
-  USD: { major: 'Dollars', minor: 'Cents', symbol: '$' },
-  GBP: { major: 'Pounds', minor: 'Pence', symbol: '£' },
-  AED: { major: 'Dirhams', minor: 'Fils', symbol: 'AED' },
-};
-
 export function SalarySlipPreview({ data, previewRef, taxConfig }: Props) {
   const totalEarnings = data.earnings.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   const totalDeductions = data.deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   const netPay = totalEarnings - totalDeductions;
 
   const currency = taxConfig?.currency || 'INR';
-  const cw = currencyWords[currency] || { major: 'Units', minor: 'Fraction', symbol: currency };
+  const locale = taxConfig?.locale || 'en-IN';
+  const cw = getCurrencyInfo(currency);
 
-  const fmt = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
+  const fmt = (amount: number) => formatCurrency(amount, currency, locale);
 
-  const netPayWords = (() => {
-    if (netPay <= 0) return `Zero ${cw.major} Only`;
-    
-    const integerPart = Math.floor(netPay);
-    const fractionalPart = Math.round((netPay - integerPart) * 100);
-    
-    let words = toWords(integerPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ` ${cw.major}`;
-    
-    if (fractionalPart > 0) {
-      words += ' and ' + toWords(fractionalPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ` ${cw.minor}`;
-    }
-    
-    return words + ' Only';
-  })();
+  const netPayWords = amountToWords(netPay, currency);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
@@ -85,7 +59,7 @@ export function SalarySlipPreview({ data, previewRef, taxConfig }: Props) {
             {data.company.logo ? (
               <img
                 src={data.company.logo}
-                alt="Logo"
+                alt={`${data.company.name || 'Company'} logo`}
                 style={{ height: 48, objectFit: 'contain', maxWidth: 200, marginBottom: 8 }}
               />
             ) : (
