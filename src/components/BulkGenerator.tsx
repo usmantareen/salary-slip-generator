@@ -321,11 +321,11 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
                   <tr style="border-bottom: 1px solid #f3f4f6;">
                     <td style="padding: 10px 16px; font-size: 9pt; color: #1f2937;">${e?.name || ''}</td>
                     <td style="padding: 10px 16px; text-align: right; font-size: 9pt; font-weight: 500; white-space: nowrap;">
-                      ${e?.amount ? `${cw.symbol} ${fmt(e.amount)}` : ''}
+                      ${e?.amount ? fmt(e.amount) : ''}
                     </td>
                     <td style="padding: 10px 16px; font-size: 9pt; color: #1f2937; border-left: 1.5px solid #000;">${d?.name || ''}</td>
                     <td style="padding: 10px 16px; text-align: right; font-size: 9pt; font-weight: 500; white-space: nowrap;">
-                      ${d?.amount ? `${cw.symbol} ${fmt(d.amount)}` : ''}
+                      ${d?.amount ? fmt(d.amount) : ''}
                     </td>
                   </tr>
                 `;
@@ -335,13 +335,13 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
               <tr style="background-color: #f9fafb; border-top: 1.5px solid #000;">
                 <td style="padding: 12px 16px; font-size: 9pt; font-weight: 700;">Total Earnings</td>
                 <td style="padding: 12px 16px; text-align: right; font-size: 9pt; font-weight: 700; white-space: nowrap;">
-                  ${cw.symbol} ${fmt(totalEarnings)}
+                  ${fmt(totalEarnings)}
                 </td>
                 <td style="padding: 12px 16px; font-size: 9pt; font-weight: 700; border-left: 1.5px solid #000;">
                   Total Deductions
                 </td>
                 <td style="padding: 12px 16px; text-align: right; font-size: 9pt; font-weight: 700; white-space: nowrap;">
-                  ${cw.symbol} ${fmt(totalDeductions)}
+                  ${fmt(totalDeductions)}
                 </td>
               </tr>
             </tfoot>
@@ -362,7 +362,7 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
               Net Payable Amount
             </p>
             <p style="font-size: 18pt; font-weight: 800; color: #fff; margin: 0; letter-spacing: -0.01em;">
-              ${cw.symbol} ${fmt(netPay)}
+              ${fmt(netPay)}
             </p>
           </div>
         </div>

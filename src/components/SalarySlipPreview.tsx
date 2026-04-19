@@ -164,11 +164,11 @@ export function SalarySlipPreview({ data, previewRef, taxConfig }: Props) {
                 <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
                   <td style={{ padding: '10px 16px', fontSize: '9pt', color: '#1f2937' }}>{earning?.name || ''}</td>
                   <td style={{ padding: '10px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    {earning?.amount ? `${cw.symbol} ${fmt(earning.amount)}` : ''}
+                    {earning?.amount ? fmt(earning.amount) : ''}
                   </td>
                   <td style={{ padding: '10px 16px', fontSize: '9pt', color: '#1f2937', borderLeft: '1.5px solid #000' }}>{deduction?.name || ''}</td>
                   <td style={{ padding: '10px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    {deduction?.amount ? `${cw.symbol} ${fmt(deduction.amount)}` : ''}
+                    {deduction?.amount ? fmt(deduction.amount) : ''}
                   </td>
                 </tr>
               );
@@ -178,13 +178,13 @@ export function SalarySlipPreview({ data, previewRef, taxConfig }: Props) {
             <tr style={{ backgroundColor: '#f9fafb', borderTop: '1.5px solid #000' }}>
               <td style={{ padding: '12px 16px', fontSize: '9pt', fontWeight: 700 }}>Total Earnings</td>
               <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                {cw.symbol} {fmt(totalEarnings)}
+                {fmt(totalEarnings)}
               </td>
               <td style={{ padding: '12px 16px', fontSize: '9pt', fontWeight: 700, borderLeft: '1.5px solid #000' }}>
                 Total Deductions
               </td>
               <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                {cw.symbol} {fmt(totalDeductions)}
+                {fmt(totalDeductions)}
               </td>
             </tr>
           </tfoot>
@@ -205,7 +205,7 @@ export function SalarySlipPreview({ data, previewRef, taxConfig }: Props) {
             Net Payable Amount
           </p>
           <p style={{ fontSize: '18pt', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em' }}>
-            {cw.symbol} {fmt(netPay)}
+            {fmt(netPay)}
           </p>
         </div>
       </div>
