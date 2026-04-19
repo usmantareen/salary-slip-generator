@@ -1,6 +1,6 @@
 import React from 'react';
 import { SalaryData, SalaryItem, TaxConfig } from '../types';
-import { Plus, Trash2, Upload, X, IndianRupee } from 'lucide-react';
+import { Plus, Trash2, Upload, X, CircleDollarSign } from 'lucide-react';
 
 interface Props {
   data: SalaryData;
@@ -56,7 +56,7 @@ function InlineTextarea({
 
 /* ─── Main Component ──────────────────────────────────────── */
 
-export function SalarySlipForm({ data, onChange }: Props) {
+export function SalarySlipForm({ data, onChange, taxConfig }: Props) {
 
   /* Company */
   const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -103,8 +103,10 @@ export function SalarySlipForm({ data, onChange }: Props) {
   const totalDeductions = data.deductions.reduce((s, d) => s + (Number(d.amount) || 0), 0);
   const netPay          = totalEarnings - totalDeductions;
 
+  const currency = taxConfig?.currency || 'INR';
+
   const fmt = (n: number) =>
-    n.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 });
+    n.toLocaleString('en-IN', { style: 'currency', currency, minimumFractionDigits: 0 });
 
   /* Inline row for earnings/deductions */
   const SalaryRow = ({
@@ -308,7 +310,7 @@ export function SalarySlipForm({ data, onChange }: Props) {
       <div className="card animate-fade-in-up">
         <div className="card-header">
           <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <IndianRupee size={13} style={{ color: 'var(--clr-text-muted)', opacity: 0.8 }} />
+            <CircleDollarSign size={13} style={{ color: 'var(--clr-text-muted)', opacity: 0.8 }} />
             Salary Breakdown
           </span>
           {/* Summary chips */}

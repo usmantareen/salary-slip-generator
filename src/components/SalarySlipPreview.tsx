@@ -1,34 +1,47 @@
 import React from 'react';
-import { SalaryData } from '../types';
+import { SalaryData, TaxConfig } from '../types';
 import { toWords } from 'number-to-words';
 
 interface Props {
   data: SalaryData;
   previewRef: React.RefObject<HTMLDivElement | null>;
+  taxConfig?: TaxConfig;
 }
 
-export function SalarySlipPreview({ data, previewRef }: Props) {
+const currencyWords: Record<string, { major: string; minor: string; symbol: string }> = {
+  INR: { major: 'Rupees', minor: 'Paise', symbol: '₹' },
+  USD: { major: 'Dollars', minor: 'Cents', symbol: '$' },
+  GBP: { major: 'Pounds', minor: 'Pence', symbol: '£' },
+  AED: { major: 'Dirhams', minor: 'Fils', symbol: 'AED' },
+};
+
+export function SalarySlipPreview({ data, previewRef, taxConfig }: Props) {
   const totalEarnings = data.earnings.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   const totalDeductions = data.deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   const netPay = totalEarnings - totalDeductions;
 
+  const currency = taxConfig?.currency || 'INR';
+  const cw = currencyWords[currency] || { major: 'Units', minor: 'Fraction', symbol: currency };
+
   const fmt = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: currency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const netPayWords = (() => {
-    if (netPay <= 0) return 'Zero Rupees Only';
+    if (netPay <= 0) return `Zero ${cw.major} Only`;
     
     const integerPart = Math.floor(netPay);
     const fractionalPart = Math.round((netPay - integerPart) * 100);
     
-    let words = toWords(integerPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' Rupees';
+    let words = toWords(integerPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ` ${cw.major}`;
     
     if (fractionalPart > 0) {
-      words += ' and ' + toWords(fractionalPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' Paise';
+      words += ' and ' + toWords(fractionalPart).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ` ${cw.minor}`;
     }
     
     return words + ' Only';
@@ -151,11 +164,11 @@ export function SalarySlipPreview({ data, previewRef }: Props) {
                 <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
                   <td style={{ padding: '10px 16px', fontSize: '9pt', color: '#1f2937' }}>{earning?.name || ''}</td>
                   <td style={{ padding: '10px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    {earning?.amount ? `Rs. ${fmt(earning.amount)}` : ''}
+                    {earning?.amount ? `${cw.symbol} ${fmt(earning.amount)}` : ''}
                   </td>
                   <td style={{ padding: '10px 16px', fontSize: '9pt', color: '#1f2937', borderLeft: '1.5px solid #000' }}>{deduction?.name || ''}</td>
                   <td style={{ padding: '10px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    {deduction?.amount ? `Rs. ${fmt(deduction.amount)}` : ''}
+                    {deduction?.amount ? `${cw.symbol} ${fmt(deduction.amount)}` : ''}
                   </td>
                 </tr>
               );
@@ -165,13 +178,13 @@ export function SalarySlipPreview({ data, previewRef }: Props) {
             <tr style={{ backgroundColor: '#f9fafb', borderTop: '1.5px solid #000' }}>
               <td style={{ padding: '12px 16px', fontSize: '9pt', fontWeight: 700 }}>Total Earnings</td>
               <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                Rs. {fmt(totalEarnings)}
+                {cw.symbol} {fmt(totalEarnings)}
               </td>
               <td style={{ padding: '12px 16px', fontSize: '9pt', fontWeight: 700, borderLeft: '1.5px solid #000' }}>
                 Total Deductions
               </td>
               <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '9pt', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                Rs. {fmt(totalDeductions)}
+                {cw.symbol} {fmt(totalDeductions)}
               </td>
             </tr>
           </tfoot>
@@ -192,7 +205,7 @@ export function SalarySlipPreview({ data, previewRef }: Props) {
             Net Payable Amount
           </p>
           <p style={{ fontSize: '18pt', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em' }}>
-            Rs. {fmt(netPay)}
+            {cw.symbol} {fmt(netPay)}
           </p>
         </div>
       </div>

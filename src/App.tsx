@@ -51,8 +51,8 @@ const initialData: SalaryData = {
 type ViewMode = 'single' | 'bulk';
 type PanelView = 'form' | 'preview';
 
-const fmt = (n: number) =>
-  n.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 });
+  const fmt = (n: number) =>
+    n.toLocaleString('en-IN', { style: 'currency', currency: currentTaxConfig.currency, minimumFractionDigits: 0 });
 
 export default function App() {
   const [data, setData] = useState<SalaryData>(initialData);
@@ -303,7 +303,7 @@ export default function App() {
                           : '0'
                       }}
                     >
-                      <SalarySlipPreview data={data} previewRef={previewRef} />
+                      <SalarySlipPreview data={data} previewRef={previewRef} taxConfig={currentTaxConfig} />
                     </div>
                   </div>
                 </div>

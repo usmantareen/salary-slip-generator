@@ -118,7 +118,7 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
       container.style.width = '210mm';
       document.body.appendChild(container);
 
-      const canvas = await renderPayslipToCanvas(data, container);
+      const canvas = await renderPayslipToCanvas(data, container, taxConfig);
       
       if (!canvas) {
         throw new Error('Failed to render payslip');
@@ -157,10 +157,10 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
     }
   };
 
-  const renderPayslipToCanvas = async (data: SalaryData, container: HTMLDivElement): Promise<HTMLCanvasElement | null> => {
+  const renderPayslipToCanvas = async (data: SalaryData, container: HTMLDivElement, taxConfig: TaxConfig | null): Promise<HTMLCanvasElement | null> => {
     return new Promise((resolve) => {
       const root = document.createElement('div');
-      root.innerHTML = generatePayslipHTML(data);
+      root.innerHTML = generatePayslipHTML(data, taxConfig);
       container.appendChild(root);
 
       setTimeout(async () => {
@@ -181,21 +181,33 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
     });
   };
 
-  const generatePayslipHTML = (data: SalaryData): string => {
+  const currencyWordsMap: Record<string, { major: string; minor: string; symbol: string }> = {
+    INR: { major: 'Rupees', minor: 'Paise', symbol: '₹' },
+    USD: { major: 'Dollars', minor: 'Cents', symbol: '$' },
+    GBP: { major: 'Pounds', minor: 'Pence', symbol: '£' },
+    AED: { major: 'Dirhams', minor: 'Fils', symbol: 'AED' },
+  };
+
+  const generatePayslipHTML = (data: SalaryData, taxConfig: TaxConfig | null): string => {
     const totalEarnings = data.earnings.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const totalDeductions = data.deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const netPay = totalEarnings - totalDeductions;
 
+    const currency = taxConfig?.currency || 'INR';
+    const cw = currencyWordsMap[currency] || { major: 'Units', minor: 'Fraction', symbol: currency };
+
     const fmt = (amount: number) => {
       return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: currency,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(amount);
     };
 
     const netPayWords = netPay > 0
-      ? toWords(netPay).replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) + ' Rupees Only'
-      : 'Zero Rupees Only';
+      ? toWords(Math.floor(netPay)).replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) + ` ${cw.major} Only`
+      : `Zero ${cw.major} Only`;
 
     const formatDate = (dateStr: string) => {
       if (!dateStr) return '-';
@@ -309,11 +321,11 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
                   <tr style="border-bottom: 1px solid #f3f4f6;">
                     <td style="padding: 10px 16px; font-size: 9pt; color: #1f2937;">${e?.name || ''}</td>
                     <td style="padding: 10px 16px; text-align: right; font-size: 9pt; font-weight: 500; white-space: nowrap;">
-                      ${e?.amount ? `Rs. ${fmt(e.amount)}` : ''}
+                      ${e?.amount ? `${cw.symbol} ${fmt(e.amount)}` : ''}
                     </td>
                     <td style="padding: 10px 16px; font-size: 9pt; color: #1f2937; border-left: 1.5px solid #000;">${d?.name || ''}</td>
                     <td style="padding: 10px 16px; text-align: right; font-size: 9pt; font-weight: 500; white-space: nowrap;">
-                      ${d?.amount ? `Rs. ${fmt(d.amount)}` : ''}
+                      ${d?.amount ? `${cw.symbol} ${fmt(d.amount)}` : ''}
                     </td>
                   </tr>
                 `;
@@ -323,13 +335,13 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
               <tr style="background-color: #f9fafb; border-top: 1.5px solid #000;">
                 <td style="padding: 12px 16px; font-size: 9pt; font-weight: 700;">Total Earnings</td>
                 <td style="padding: 12px 16px; text-align: right; font-size: 9pt; font-weight: 700; white-space: nowrap;">
-                  Rs. ${fmt(totalEarnings)}
+                  ${cw.symbol} ${fmt(totalEarnings)}
                 </td>
                 <td style="padding: 12px 16px; font-size: 9pt; font-weight: 700; border-left: 1.5px solid #000;">
                   Total Deductions
                 </td>
                 <td style="padding: 12px 16px; text-align: right; font-size: 9pt; font-weight: 700; white-space: nowrap;">
-                  Rs. ${fmt(totalDeductions)}
+                  ${cw.symbol} ${fmt(totalDeductions)}
                 </td>
               </tr>
             </tfoot>
@@ -350,7 +362,7 @@ export function BulkGenerator({ employees, company, month, year, taxConfig }: Pr
               Net Payable Amount
             </p>
             <p style="font-size: 18pt; font-weight: 800; color: #fff; margin: 0; letter-spacing: -0.01em;">
-              Rs. ${fmt(netPay)}
+              ${cw.symbol} ${fmt(netPay)}
             </p>
           </div>
         </div>
